@@ -10,7 +10,7 @@ async function connect(){
     try{
         
         // Connect and create a channel
-        const connection = await amqp.connect(rabbittAddressLocal);
+        const connection = await amqp.connect(rabbittAddress);
         const channel = await connection.createChannel();
         
         //----------------------------------------------------------------------------------------------

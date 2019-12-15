@@ -2,6 +2,8 @@ const amqp = require("amqplib");
 const rabbittAddress = "amqp://guest:guest@192.168.43.99:5672";
 const rabbittAddressLocal = "amqp://localhost:5672";
 
+const {handleCountRequest} = require("./handleRequest");
+
 const consumerName = "CONSUMER3";
 const consumerId = "3";
 
@@ -11,7 +13,7 @@ connect(); // run the bellow function
 async function connect(){
     try{
         
-        const connection = await amqp.connect(rabbittAddressLocal);
+        const connection = await amqp.connect(rabbittAddress);
         console.log("Waiting for messages...");
 
         const channelJobs = await connection.createChannel();
@@ -33,7 +35,11 @@ async function connect(){
             if(input.consumerName == consumerName){
                 console.log(`Recieved job with start date ${input.firstDate} and end date ${input.lastDate}`); 
                 channelJobs.ack(message);
-                //rethink();
+                handleCountRequest([input.firstDate, input.lastDate], result => {
+                    console.log(result);
+                    channelJobs.assertQueue("CONSUMER_3_RESULT");
+                    channelJobs.sendToQueue("CONSUMER_3_RESULT", Buffer.from(JSON.stringify({result: result})));
+                });
             }
             
         });

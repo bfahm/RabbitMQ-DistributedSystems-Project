@@ -5,6 +5,7 @@ const amqp = require("amqplib");
 const rabbittAddress = "amqp://guest:guest@192.168.43.99:5672";
 const rabbittAddressLocal = "amqp://localhost:5672";
 
+var finalResult = 0; 
 
 connect();
 
@@ -12,7 +13,7 @@ async function connect() {
     try {
 
         // Connect and create a channel
-        const connection = await amqp.connect(rabbittAddressLocal);
+        const connection = await amqp.connect(rabbittAddress);
         const channel = await connection.createChannel();
 
         //----------------------------------------------------------------------------------------------
@@ -36,7 +37,7 @@ async function assignToConsumer(consumerName, firstDate, lastDate) {
     try {
 
         // Connect and create a channel
-        const connection = await amqp.connect(rabbittAddressLocal);
+        const connection = await amqp.connect(rabbittAddress);
         const channel = await connection.createChannel();
         queueName = consumerName;
 
@@ -54,16 +55,64 @@ async function assignToConsumer(consumerName, firstDate, lastDate) {
 
         console.log(" [x] Sent %s", msg);
 
+        
+
         setTimeout(function() { 
-            connection.close(); 
-            process.exit(0); 
-          }, 500);
+
+               
+            try{
+                channel.assertQueue("CONSUMER_1_RESULT");
+                channel.consume("CONSUMER_1_RESULT", message => {
+                    channel.ack(message);
+                    const input = JSON.parse(message.content.toString());     
+                    console.log(input);      
+                    
+                    addToFinalResult(parseInt(input.result));
+                });
+            }catch(ex){
+                console.log("Did not find queue because Consumer was offline");
+            }
+
+            try{
+                channel.assertQueue("CONSUMER_2_RESULT");
+                channel.consume("CONSUMER_2_RESULT", message => {
+                    channel.ack(message);
+                    const input = JSON.parse(message.content.toString());     
+                    console.log(input);      
+                    addToFinalResult(parseInt(input.result));
+                });
+            }catch(ex){
+                console.log("Did not find queue because Consumer was offline");
+            }
+
+            try{
+                channel.assertQueue("CONSUMER_3_RESULT");
+                channel.consume("CONSUMER_3_RESULT", message => {
+                    channel.ack(message);
+                    const input = JSON.parse(message.content.toString());     
+                    console.log(input); 
+                    addToFinalResult(parseInt(input.result));
+                });
+            }catch(ex){
+                console.log("Did not find queue because Consumer was offline");
+            }
+
+            console.log("Final Result is: " + finalResult);
+            
+          }, 5000);
+
+          
+        
 
     } catch (ex) {
         console.error(ex);
     }
 }
 
+function addToFinalResult(number){
+    finalResult += number;
+    console.log(finalResult);
+}
 
 
 function handleStatusResult(results) {
@@ -76,7 +125,7 @@ function handleStatusResult(results) {
     }
 
     for (var i = 0; i < arrayLength; i++) {
-        if (results[i] > 1) {
+        if (results[i] > 10) {
             console.log("Consumer " + (i + 1) + " has been offline since " + results[i] + " seconds");
         } else {
             console.log("Consumer " + (i + 1) + " is online.");

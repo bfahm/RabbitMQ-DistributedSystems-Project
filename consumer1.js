@@ -1,4 +1,5 @@
 const amqp = require("amqplib");
+const {handleCountRequest} = require("./handleRequest");
 const rabbittAddress = "amqp://guest:guest@192.168.43.99:5672";
 const rabbittAddressLocal = "amqp://localhost:5672";
 
@@ -11,7 +12,7 @@ connect(); // run the bellow function
 async function connect(){
     try{
         
-        const connection = await amqp.connect(rabbittAddressLocal);
+        const connection = await amqp.connect(rabbittAddress);
         console.log("Waiting for messages...");
 
         const channelJobs = await connection.createChannel();
@@ -33,7 +34,14 @@ async function connect(){
             if(input.consumerName == consumerName){
                 console.log(`Recieved job with start date ${input.firstDate} and end date ${input.lastDate}`); 
                 channelJobs.ack(message);
-                //rethink();
+
+                handleCountRequest([input.firstDate, input.lastDate], result => {
+                    console.log(result);
+                    channelJobs.assertQueue("CONSUMER_1_RESULT");
+                    channelJobs.sendToQueue("CONSUMER_1_RESULT", Buffer.from(JSON.stringify({result: result})));
+                });
+                
+                
             }
             
         });
@@ -59,6 +67,7 @@ async function connect(){
     }
 }
 
+
 function update(){
     var today = new Date();
     var time = today.getHours() *60*60 + today.getMinutes()*60 + today.getSeconds();
@@ -66,7 +75,7 @@ function update(){
     return {ID: consumerId, time: time}
 }
 
-function rethink(){
+function rethink(firstDate, lastDate){
     const r = require('rethinkdb');
 
     var connection = null;
