@@ -152,7 +152,7 @@ function distributeWork(arrayOfActiveConsumers){
 
     for(var i = 0; i< numberOfActiveConsumers; i++){
         const lenghtOfCurrentChunck = chunkifyResult[i].length;
-        assignToConsumer("CONSUMER"+(i+1), chunkifyResult[i][0], chunkifyResult[i][lenghtOfCurrentChunck-1]);
+        assignToConsumer(arrayOfActiveConsumers[i], chunkifyResult[i][0], chunkifyResult[i][lenghtOfCurrentChunck-1]);
     }
 }
 
