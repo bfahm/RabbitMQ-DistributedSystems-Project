@@ -1,0 +1,24 @@
+first command:
+
+
+HOST: rethinkdb -n lenovoData -d ./Assignment --bind all
+
+CLIENT: rethinkdb -n bola -d ./nobel -o 1 -j 192.168.43.222:29015 --bind all
+
+
+Run this in Data Explorer:
+
+
+r.db('rethinkdb').table('server_status').map({
+'name': r.row('name'),
+'hostname': r.row('network')('hostname'),
+'addresses': r.row('network')('canonical_addresses')
+.map(address => address('host').add(':').add(address('port').coerceTo('string')))
+.reduce((a,b) => a.add(',').add(b)),
+'cmd': r.row('process')('argv').skip(1).reduce((a,b) => a.add(' ').add(b))
+})
+
+
+
+
+

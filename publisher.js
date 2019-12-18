@@ -97,7 +97,8 @@ async function assignToConsumer(consumerName, firstDate, lastDate) {
                 console.log("Did not find queue because Consumer was offline");
             }
 
-            console.log("Final Result is: " + finalResult);
+            console.log("Current result is: " + finalResult);
+            
             
           }, 5000);
 
